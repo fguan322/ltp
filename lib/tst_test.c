@@ -35,7 +35,9 @@
 #include "tst_timer_test.h"
 #include "tst_clocks.h"
 #include "tst_timer.h"
+#include "tst_wallclock.h"
 #include "tst_sys_conf.h"
+#include "tst_kconfig.h"
 
 #include "old_resource.h"
 #include "old_device.h"
@@ -770,6 +772,9 @@ static void do_setup(int argc, char *argv[])
 	if (tst_test->tconf_msg)
 		tst_brk(TCONF, "%s", tst_test->tconf_msg);
 
+	if (tst_test->needs_kconfigs)
+		tst_kconfig_check(tst_test->needs_kconfigs);
+
 	assert_test_fn();
 
 	tid = get_tid(argv);
@@ -868,6 +873,9 @@ static void do_setup(int argc, char *argv[])
 
 	if (tst_test->resource_files)
 		copy_resources();
+
+	if (tst_test->restore_wallclock)
+		tst_wallclock_save();
 }
 
 static void do_test_setup(void)
@@ -899,6 +907,9 @@ static void do_cleanup(void)
 		tst_sys_conf_restore(0);
 
 	cleanup_ipc();
+
+	if (tst_test->restore_wallclock)
+		tst_wallclock_restore();
 }
 
 static void run_tests(void)

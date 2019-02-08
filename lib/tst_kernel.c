@@ -15,7 +15,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <linux/personality.h>
+#include <sys/personality.h>
 #include <sys/utsname.h>
 #include "test.h"
 #include "tst_kernel.h"
@@ -83,9 +83,17 @@ int tst_kernel_bits(void)
 
 int tst_check_driver(const char *name)
 {
+#ifndef __ANDROID__
 	const char * const argv[] = { "modprobe", "-n", name, NULL };
 	int res = tst_run_cmd_(NULL, argv, "/dev/null", "/dev/null", 1);
 
 	/* 255 - it looks like modprobe not available */
 	return (res == 255) ? 0 : res;
+#else
+	/* Android modprobe may not have '-n', or properly installed
+	 * module.*.bin files to determine built-in drivers. Assume
+	 * all drivers are available.
+	 */
+	return 0;
+#endif
 }

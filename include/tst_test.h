@@ -69,8 +69,12 @@ void tst_brk_(const char *file, const int lineno, int ttype,
               const char *fmt, ...)
               __attribute__ ((format (printf, 4, 5)));
 
-#define tst_brk(ttype, arg_fmt, ...) \
-	tst_brk_(__FILE__, __LINE__, (ttype), (arg_fmt), ##__VA_ARGS__)
+#define tst_brk(ttype, arg_fmt, ...)						\
+	({									\
+		TST_BRK_SUPPORTS_ONLY_TCONF_TBROK(!((ttype) &			\
+			(TBROK | TCONF | TFAIL))); 				\
+		tst_brk_(__FILE__, __LINE__, (ttype), (arg_fmt), ##__VA_ARGS__);\
+	})
 
 /* flush stderr and stdout */
 void tst_flush(void);
@@ -131,6 +135,7 @@ struct tst_test {
 	int needs_rofs:1;
 	int child_needs_reinit:1;
 	int needs_devfs:1;
+	int restore_wallclock:1;
 	/*
 	 * If set the test function will be executed for all available
 	 * filesystems and the current filesytem type would be set in the
@@ -182,6 +187,12 @@ struct tst_test {
 	 * before setup and restore after cleanup
 	 */
 	const char * const *save_restore;
+
+	/*
+	 * NULL terminated array of kernel config options required for the
+	 * test.
+	 */
+	const char *const *needs_kconfigs;
 };
 
 /*
